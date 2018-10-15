@@ -1,12 +1,8 @@
 import tensorflow as tf
 import math
-import matplotlib.pyplot as plt
 import numpy as np
-from NLP.NLP_Tool import NLP_Tool
 
 text =['he is the king','the king is royal','she is the royal queen']
-training_sample=[]
-nlp = NLP_Tool(load_lg_corpus=False)
 window_size = 2
 def __is_bounded(direction,range,index,tokens_leng):
     cover = range*direction
@@ -20,15 +16,15 @@ def get_context(tokens, window_size):
     for i, token in enumerate(tokens):
         for j in range(1, window_size+1):
             if not __is_bounded(1,j,i,len(tokens)):
-                context_pair.append((tokens[i].text,tokens[i+j].text))
+                context_pair.append((tokens[i],tokens[i+j]))
             if not __is_bounded(-1,j,i,len(tokens)):
-                context_pair.append((tokens[i].text,tokens[i-j].text))
+                context_pair.append((tokens[i],tokens[i-j]))
     return context_pair
 
 def __get_word_set(tokens):
     word_set = set()
     for token in tokens:
-        word_set.add(token.text)
+        word_set.add(token)
     return word_set
 
 def __get_word_index(word_set):
@@ -60,8 +56,21 @@ def __dis(vec1, vec2):
         dis+=math.pow((vec1[i]-vec2[i]),2)
     return dis
 
+def get_cos_similarity(vec1, vec2):
+    vec1_leng=0
+    for value in vec1:
+        vec1_leng+=(value*value)
+    vec1_leng=math.sqrt(vec1_leng)
+    vec2_leng=0
+    for value in vec2:
+        vec2_leng+=(value*value)
+    vec2_leng=math.sqrt(vec2_leng)
+    product=np.dot(vec1,vec2)
+
+    return product/(vec1_leng*vec2_leng)
+
 def __sim(vec1, vec2):
-    return (1 - math.acos(nlp.get_cos_similarity(vec1,vec2)) / math.pi)
+    return (1 - math.acos(get_cos_similarity(vec1,vec2)) / math.pi)
 
 
 def find_cloest_word(word_set,session,target_word):
@@ -84,7 +93,7 @@ if __name__ == '__main__':
     word_set = set()
 
     for sentence in text:
-        tokens = nlp.get_tokens(sentence.lower())
+        tokens = sentence.lower().split(' ')
         context_pair += get_context(tokens,window_size)
         tmp_word_set = __get_word_set(tokens)
         for word in tmp_word_set:
