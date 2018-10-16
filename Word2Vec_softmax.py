@@ -111,7 +111,6 @@ if __name__ == '__main__':
     word_size = len(word_set)
     embedding_size = 5
     batch_size = len(context_pair)
-    num_sampled = 3
     embeddings = tf.Variable(
         tf.random_uniform([word_size, embedding_size], -1.0, 1.0))
     nce_weights = tf.Variable(
