@@ -95,6 +95,7 @@ def find_cloest_word(word_set,session,target_word):
 
 text =['he is the king','the king is royal','she is the royal queen']
 window_size = 2
+embedding_size = 5
 
 if __name__ == '__main__':
     context_pair=[]
@@ -109,21 +110,26 @@ if __name__ == '__main__':
 
     word_index_dic,inverse_word_dic=__get_word_index(word_set)
     word_size = len(word_set)
-    embedding_size = 5
     batch_size = len(context_pair)
+    inputs = [word_index_dic[x[0]] for x in context_pair]
+    labels = [word_index_dic[x[1]] for x in context_pair]
+
+    train_inputs = tf.placeholder(tf.int32, shape=[batch_size])
+    train_labels = tf.placeholder(tf.int32, shape=[batch_size,])
+    train_labels_vector = tf.one_hot(train_labels,word_size)
+
     embeddings = tf.Variable(
         tf.random_uniform([word_size, embedding_size], -1.0, 1.0))
+    embed = tf.nn.embedding_lookup(embeddings, train_inputs)
+
     nce_weights = tf.Variable(
         tf.truncated_normal([word_size,embedding_size],
                             stddev=1.0 / math.sqrt(embedding_size)))
 
     nce_biases = tf.Variable(tf.zeros([word_size]))
-    train_inputs = tf.placeholder(tf.int32, shape=[batch_size])
-    train_labels = tf.placeholder(tf.int32, shape=[batch_size,])
-    train_labels_vector = tf.one_hot(train_labels,word_size)
-    embed = tf.nn.embedding_lookup(embeddings, train_inputs)
-    activate = tf.add(tf.matmul(embed,tf.transpose(nce_weights)),nce_biases)
-    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=activate,labels=train_labels_vector))
+
+    prediction = tf.add(tf.matmul(embed, tf.transpose(nce_weights)), nce_biases)
+    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=prediction, labels=train_labels_vector))
     optimizer = tf.train.GradientDescentOptimizer(learning_rate=1.0).minimize(loss)
     batch_list = generate_batch(context_pair, batch_size)
     session = tf.Session()
@@ -131,10 +137,9 @@ if __name__ == '__main__':
     session.run(init)
     for iteration in range(0,10000):
         total_loss = 0
-        inputs = [word_index_dic[x[0]] for x in context_pair]
-        labels = [word_index_dic[x[1]] for x in context_pair]
+
         feed_dict = {train_inputs: inputs, train_labels: labels}
-        _, cur_loss,pred= session.run([optimizer, loss,activate], feed_dict=feed_dict)
+        _, cur_loss,pred= session.run([optimizer, loss, prediction], feed_dict=feed_dict)
         print('%s: loss: %s' %(iteration,cur_loss))
     print(find_cloest_word(word_set,session,'king'))
     print(find_cloest_word(word_set, session, 'queen'))
