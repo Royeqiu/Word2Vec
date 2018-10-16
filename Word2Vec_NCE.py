@@ -117,7 +117,7 @@ if __name__ == '__main__':
         tf.truncated_normal([word_size, embedding_size],
                             stddev=1.0 / math.sqrt(embedding_size)))
     nce_biases = tf.Variable(tf.zeros([word_size]))
-    
+
     loss = tf.reduce_mean(
         tf.nn.nce_loss(weights=nce_weights,
                        biases=nce_biases,
@@ -127,7 +127,6 @@ if __name__ == '__main__':
                        num_classes=word_size))
 
     optimizer = tf.train.GradientDescentOptimizer(learning_rate=1.0).minimize(loss)
-    batch_list = generate_batch(context_pair, batch_size)
     session = tf.Session()
     init = tf.global_variables_initializer()
     session.run(init)

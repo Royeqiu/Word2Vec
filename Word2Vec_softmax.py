@@ -132,7 +132,6 @@ if __name__ == '__main__':
 
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=prediction, labels=train_labels_vector))
     optimizer = tf.train.GradientDescentOptimizer(learning_rate=1.0).minimize(loss)
-    batch_list = generate_batch(context_pair, batch_size)
     session = tf.Session()
     init = tf.global_variables_initializer()
     session.run(init)
