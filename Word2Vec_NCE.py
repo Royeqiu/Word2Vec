@@ -2,8 +2,7 @@ import tensorflow as tf
 import math
 import numpy as np
 
-text =['he is the king','the king is royal','she is the royal queen']
-window_size = 2
+
 def __is_bounded(direction,range,index,tokens_leng):
     cover = range*direction
     if cover+index<0 or cover+index >= tokens_leng:
@@ -88,6 +87,11 @@ def find_cloest_word(word_set,session,target_word):
             result = word
     return result
 
+text =['he is the king','the king is royal','she is the royal queen']
+window_size = 2
+embedding_size = 5
+num_sampled = 3
+
 if __name__ == '__main__':
     context_pair=[]
     word_set = set()
@@ -100,19 +104,20 @@ if __name__ == '__main__':
             word_set.add(word)
     word_index_dic,inverse_word_dic=__get_word_index(word_set)
     word_size = len(word_set)
-    embedding_size = 5
     batch_size = len(context_pair)
-    num_sampled = 3
+    inputs = [word_index_dic[x[0]] for x in context_pair]
+    labels = [[word_index_dic[x[1]]] for x in context_pair]
+
+    train_inputs = tf.placeholder(tf.int32, shape=[batch_size])
+    train_labels = tf.placeholder(tf.int32, shape=[batch_size, 1])
     embeddings = tf.Variable(
         tf.random_uniform([word_size, embedding_size], -1.0, 1.0))
+    embed = tf.nn.embedding_lookup(embeddings, train_inputs)
     nce_weights = tf.Variable(
         tf.truncated_normal([word_size, embedding_size],
                             stddev=1.0 / math.sqrt(embedding_size)))
     nce_biases = tf.Variable(tf.zeros([word_size]))
-    train_inputs = tf.placeholder(tf.int32, shape=[batch_size])
-    train_labels = tf.placeholder(tf.int32, shape=[batch_size, 1])
-    embed = tf.nn.embedding_lookup(embeddings, train_inputs)
-
+    
     loss = tf.reduce_mean(
         tf.nn.nce_loss(weights=nce_weights,
                        biases=nce_biases,
@@ -128,8 +133,6 @@ if __name__ == '__main__':
     session.run(init)
     for iteration in range(0,10000):
         total_loss = 0
-        inputs = [word_index_dic[x[0]] for x in context_pair]
-        labels = [[word_index_dic[x[1]]] for x in context_pair]
 
         feed_dict = {train_inputs: inputs, train_labels: labels}
         _, cur_loss = session.run([optimizer, loss], feed_dict=feed_dict)
