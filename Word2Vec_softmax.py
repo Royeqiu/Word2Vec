@@ -116,7 +116,6 @@ if __name__ == '__main__':
 
     train_inputs = tf.placeholder(tf.int32, shape=[batch_size])
     train_labels = tf.placeholder(tf.int32, shape=[batch_size,])
-    train_labels_vector = tf.one_hot(train_labels,word_size)
 
     embeddings = tf.Variable(
         tf.random_uniform([word_size, embedding_size], -1.0, 1.0))
@@ -129,6 +128,8 @@ if __name__ == '__main__':
     nce_biases = tf.Variable(tf.zeros([word_size]))
 
     prediction = tf.add(tf.matmul(embed, tf.transpose(nce_weights)), nce_biases)
+    train_labels_vector = tf.one_hot(train_labels,word_size)
+
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=prediction, labels=train_labels_vector))
     optimizer = tf.train.GradientDescentOptimizer(learning_rate=1.0).minimize(loss)
     batch_list = generate_batch(context_pair, batch_size)
